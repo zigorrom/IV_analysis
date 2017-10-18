@@ -20,24 +20,43 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="GraphicsLayoutWidget" name="graphicsView"/>
+      <widget class="GraphicsLayoutWidget" name="graphicsView">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
       <widget class="QWidget" name="">
        <layout class="QGridLayout" name="gridLayout_6">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
+        </property>
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupBox_4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="title">
            <string>Characteristic</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
-            <widget class="QRadioButton" name="radioButton_10">
+            <widget class="QRadioButton" name="ui_output_characteristic">
              <property name="text">
               <string>Output</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QRadioButton" name="radioButton_11">
+            <widget class="QRadioButton" name="ui_transfer_characteristic">
              <property name="text">
               <string>Transfer</string>
              </property>
@@ -48,82 +67,100 @@
         </item>
         <item row="1" column="0">
          <widget class="QGroupBox" name="groupBox_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="title">
            <string>Structure type</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
-            <widget class="QRadioButton" name="radioButton">
+            <widget class="QRadioButton" name="ui_npn_structure">
              <property name="text">
               <string>n-p-n</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QRadioButton" name="radioButton_3">
+            <widget class="QRadioButton" name="ui_ppp_structure">
              <property name="text">
               <string>p-p-p</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
           </layout>
-          <zorder>radioButton_3</zorder>
-          <zorder>radioButton</zorder>
+          <zorder>ui_ppp_structure</zorder>
+          <zorder>ui_npn_structure</zorder>
          </widget>
         </item>
         <item row="2" column="0">
          <widget class="QGroupBox" name="groupBox_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="title">
            <string>Scale mode</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="0" column="0">
-            <widget class="QRadioButton" name="radioButton_4">
+            <widget class="QRadioButton" name="ui_linear_scale">
              <property name="text">
               <string>Linear</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item row="0" column="1" colspan="2">
-            <widget class="QRadioButton" name="radioButton_5">
+            <widget class="QRadioButton" name="ui_semilog_structure">
              <property name="text">
               <string>Semi-log</string>
              </property>
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLineEdit" name="lineEdit_3"/>
+            <widget class="QLineEdit" name="ui_offset_value"/>
            </item>
            <item row="2" column="1" colspan="2">
-            <widget class="QPushButton" name="pushButton_10">
+            <widget class="QPushButton" name="ui_correct_offset">
              <property name="text">
               <string>Correct Offset</string>
              </property>
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QPushButton" name="pushButton_12">
+            <widget class="QPushButton" name="ui_peek_min_offset">
              <property name="text">
               <string>Min</string>
              </property>
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QPushButton" name="pushButton_13">
+            <widget class="QPushButton" name="ui_peek_offset">
              <property name="text">
               <string>Peek</string>
              </property>
             </widget>
            </item>
            <item row="3" column="2">
-            <widget class="QPushButton" name="pushButton_11">
+            <widget class="QPushButton" name="ui_peek_max_offset">
              <property name="text">
               <string>Max</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0" colspan="3">
-            <widget class="QCheckBox" name="checkBox_2">
+            <widget class="QCheckBox" name="ui_absolute_current">
              <property name="text">
               <string>Absolute Current </string>
              </property>
@@ -145,7 +182,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="1">
-            <widget class="QPushButton" name="pushButton_2">
+            <widget class="QPushButton" name="ui_clear_derivative">
              <property name="text">
               <string>Clear Derivative</string>
              </property>
@@ -159,14 +196,14 @@
             </widget>
            </item>
            <item row="0" column="0">
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="ui_plot_derivative">
              <property name="text">
               <string>Plot Derivative</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QPushButton" name="pushButton_3">
+            <widget class="QPushButton" name="ui_estimate_vth">
              <property name="text">
               <string>Estimate Vth</string>
              </property>
@@ -180,14 +217,14 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QPushButton" name="pushButton_7">
+            <widget class="QPushButton" name="ui_estimate_gm">
              <property name="text">
               <string>Estimate gm_max</string>
              </property>
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QCheckBox" name="checkBox">
+            <widget class="QCheckBox" name="ui_is_working">
              <property name="text">
               <string>Is Working</string>
              </property>
@@ -198,12 +235,18 @@
         </item>
         <item row="4" column="0">
          <widget class="QGroupBox" name="groupBox_7">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="title">
            <string>Control</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
            <item row="2" column="1">
-            <widget class="QLineEdit" name="lineEdit_6">
+            <widget class="QLineEdit" name="ui_wafer_name">
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -217,7 +260,7 @@
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QLineEdit" name="lineEdit_7">
+            <widget class="QLineEdit" name="ui_chip_name">
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -231,7 +274,7 @@
             </widget>
            </item>
            <item row="4" column="1">
-            <widget class="QLineEdit" name="lineEdit_8">
+            <widget class="QLineEdit" name="ui_transistor_number">
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -245,7 +288,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLineEdit" name="lineEdit_4">
+            <widget class="QLineEdit" name="ui_measurement_name">
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -259,7 +302,7 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLineEdit" name="lineEdit_5">
+            <widget class="QLineEdit" name="ui_experiment_name">
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -280,7 +323,11 @@
             </widget>
            </item>
            <item row="5" column="1">
-            <widget class="QDateTimeEdit" name="dateTimeEdit"/>
+            <widget class="QDateTimeEdit" name="ui_measurement_datetime">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -304,6 +351,7 @@
     </item>
    </layout>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -317,14 +365,21 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionWorking_Directory"/>
+    <addaction name="actionWorkingDirectory"/>
     <addaction name="separator"/>
     <addaction name="actionOpen_folder"/>
    </widget>
+   <widget class="QMenu" name="menuNavigate">
+    <property name="title">
+     <string>Navigate</string>
+    </property>
+    <addaction name="actionNext"/>
+    <addaction name="actionPrev"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuNavigate"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionWorking_Directory">
+  <action name="actionWorkingDirectory">
    <property name="text">
     <string>Open measurement</string>
    </property>
@@ -332,6 +387,16 @@
   <action name="actionOpen_folder">
    <property name="text">
     <string>Open folder</string>
+   </property>
+  </action>
+  <action name="actionNext">
+   <property name="text">
+    <string>Next</string>
+   </property>
+  </action>
+  <action name="actionPrev">
+   <property name="text">
+    <string>Prev</string>
    </property>
   </action>
  </widget>
