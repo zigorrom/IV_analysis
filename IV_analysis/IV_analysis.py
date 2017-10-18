@@ -3,6 +3,8 @@ import os
 import time
 import datetime
 import configparser
+import re
+import ntpath
 import numpy as np
 import pandas as pd
 
@@ -56,6 +58,7 @@ class MainView(mainViewBase, mainViewForm):
     def load_experiment(self):
         if self.measurement_file_path:
             self.measurement_data_frame.from_csv(self.measurement_file_path)
+            self.parse_measurementdata_filename(self.measurement_file_path)
 
     @QtCore.pyqtSlot()
     def on_actionNext_triggered(self):
@@ -64,6 +67,18 @@ class MainView(mainViewBase, mainViewForm):
     @QtCore.pyqtSlot()
     def on_actionPrev_triggered(self):
         print("prev file")
+
+    def parse_measurementdata_filename(self,filename):
+        filename = ntpath.basename(filename)
+        pattern = re.compile("MeasurmentData_(?P<wafer>.*?)_(?P<chip>.*?)_(?P<info>.*?)\.dat$")
+        
+        match = pattern.match(filename)
+        
+
+        print(match.group("wafer"))
+        print(match.group("chip"))
+        print(match.group("info"))
+
 
     def parse_measurement_filename(self,filename):
         pass
