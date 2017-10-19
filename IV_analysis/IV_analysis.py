@@ -54,11 +54,21 @@ class MainView(mainViewBase, mainViewForm):
     def closeEvent(self,event):
         print("closing")
         
+    def _set_experiment_params(self, experiment_name, wafer_name, chip_name):
+        pass
+
+    def _set_measurement_params(self, measurement_name, transistor_no, measurement_date):
+        pass 
+
+    def _get_parameters_of_device_by_name(self, wafer_name, chip_name, transistor_no):
+        pass
+
 
     def load_experiment(self):
         if self.measurement_file_path:
             self.measurement_data_frame.from_csv(self.measurement_file_path)
             self.parse_measurementdata_filename(self.measurement_file_path)
+            self.parse_measurement_filename(self.measurement_file_path)
 
     @QtCore.pyqtSlot()
     def on_actionNext_triggered(self):
@@ -73,15 +83,39 @@ class MainView(mainViewBase, mainViewForm):
         pattern = re.compile("MeasurmentData_(?P<wafer>.*?)_(?P<chip>.*?)_(?P<info>.*?)\.dat$")
         
         match = pattern.match(filename)
-        
+        if not match:
+            return None
 
-        print(match.group("wafer"))
-        print(match.group("chip"))
-        print(match.group("info"))
+        d = match.groupdict()
+
+        experiment_name = filename
+        wafer_name = d.get("wafer",None)
+        chip_name = d.get("chip",None)
+        info = d.get("info", None)
+        return (experiment_name, wafer_name,chip_name,info)
 
 
     def parse_measurement_filename(self,filename):
-        pass
+        filename = ntpath.basename(filename)
+        pattern = re.compile("^[tT](?P<number>[0-9]*)[-_]IV(?P<type>(lg|bg|ds))[-_](?P<info>.*?)\.dat$") #(?P<transistor>[0-9]?)[-_](?P<wafer>.*?)[-_](?P<chip>.*?)[-_]
+        
+        match = pattern.match(filename)
+        if not match:
+            return None
+
+        d = match.groupdict()
+        experiment_name = filename
+        transistor_no = d.get("number", None)
+        chatacteristic = d.get("type",None)
+        info = d.get("info",None)
+         
+        return (experiment_name, transistor_no, chatacteristic, info)
+        
+        #info = match.group("info")
+        #transistor_name = match.group("transistor")
+        ##chip_name = match.group("chip")
+        
+        #return (wafer_name,chip_name,info)
 
     
 
