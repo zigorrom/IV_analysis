@@ -2,8 +2,10 @@ import os
 import ntpath
 import re
 import pandas as pd
+import numpy as np
 
-from scipy.interpolate import interp1d
+
+from scipy.interpolate import interp1d, UnivariateSpline
 from scipy import optimize
 
 def parse_measurement_filename(filename):
@@ -28,7 +30,12 @@ def parse_measurement_filename(filename):
 #        return val/1000
 
 
-working_folder = "C:\\Users\\i.zadorozhnyi\\Desktop\\Needles2\\"
+#working_folder = "C:\\Users\\i.zadorozhnyi\\Desktop\\Needles2\\"
+working_folder = "C:\\Users\\Dell\\Desktop\\Needles2\\"
+
+result_folder = os.path.join(working_folder,"Results")
+os.makedirs(result_folder, exist_ok=True)
+
 measurement_data_file = "MeasurmentData_soi17l_chip13_needles.dat"
 
 measurement_data_path = os.path.join(working_folder, measurement_data_file)
@@ -47,7 +54,7 @@ transfer_curves = measurement_data[measurement_data["Independent Var"] == "gate"
 linear_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -0.1]
 saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
 
-for index,row in linear_transfer_curves.iterrows():
+for index,row in transfer_curves.iterrows(): #linear_transfer_curves.iterrows():
     fname = row["Filename"]
     (experiment_name, transistor_no, chatacteristic, info) = parse_measurement_filename(fname)
     number = int(transistor_no)
@@ -84,5 +91,26 @@ for index,row in linear_transfer_curves.iterrows():
 
     overdrive_gate_voltage = voltages - treshold_voltage
 
+    #dy = np.zeros(y.shape,np.float)
+    transconductance  = np.zeros(currents.shape,np.float)
+    transconductance[0:-1] = np.diff(currents)/np.diff(voltages)
+    #transconductance[-1] = (currents[-1] - currents[-2])/(voltages[-1] - voltages[-2]) 
+    #dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
+    #transconductance = UnivariateSpline(voltages, currents).derivative()(voltages)
 
+    transfer_data[drain_current] = currents
     
+    transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
+
+    transfer_data["Transconductance"] = transconductance
+    
+    pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
+
+request = 'explorer "{0}"'.format(result_folder)
+print(request)
+os.system(request)
+
+import PyOriginTools as OR # <-- this module is what you're reading about!
+sheet=OR.Sheet()
+print(sheet.colNames)
+print(sheet.data)
