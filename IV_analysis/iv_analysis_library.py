@@ -30,8 +30,8 @@ def parse_measurement_filename(filename):
 #        return val/1000
 
 
-#working_folder = "C:\\Users\\i.zadorozhnyi\\Desktop\\Needles2\\"
-working_folder = "C:\\Users\\Dell\\Desktop\\Needles2\\"
+working_folder = "C:\\Users\\i.zadorozhnyi\\Desktop\\Needles2\\"
+##working_folder = "C:\\Users\\Dell\\Desktop\\Needles2\\"
 
 result_folder = os.path.join(working_folder,"Results")
 os.makedirs(result_folder, exist_ok=True)
