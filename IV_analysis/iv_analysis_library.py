@@ -1,6 +1,7 @@
 import os
 import ntpath
 import re
+import fnmatch
 import argparse
 import pandas as pd
 import numpy as np
@@ -8,6 +9,24 @@ import numpy as np
 
 from scipy.interpolate import interp1d, UnivariateSpline
 from scipy import optimize
+
+LAYOUT_FOLDER = "layouts"
+
+def parse_measurementdata_filename(filename):
+        filename = ntpath.basename(filename)
+        pattern = re.compile("MeasurmentData_(?P<wafer>.*?)_(?P<chip>.*?)_(?P<info>.*?)\.dat$")
+        
+        match = pattern.match(filename)
+        if not match:
+            return None
+
+        d = match.groupdict()
+
+        experiment_name = filename
+        wafer_name = d.get("wafer",None)
+        chip_name = d.get("chip",None)
+        info = d.get("info", None)
+        return (experiment_name, wafer_name,chip_name,info)
 
 def parse_measurement_filename(filename):
     filename = ntpath.basename(filename)
@@ -117,11 +136,56 @@ def parse_measurement_filename(filename):
 #print(sheet.data)
 
 def __search_for_new_style_measurement_data_file(folder):
-    return ""
+    print("SEARCHING FOT MEASUREMENT DATA FILE IN:\n\r{0}".format(folder))
+    print("*"*10)
+    pattern = "MeasurmentData_*.dat"
+    files = os.listdir(folder)
+    matches = fnmatch.filter(files, pattern)
+    if matches:
+        print("FOUND MATCHES:\n\r{0}".format(matches))
+        print("*"*10)
+    #print(matches)
+    return matches
 
-
-def new_style_iv_analysis():
+def __search_layout_parameters_in_database(measurment_data_filename):
     pass
+
+
+def print_experiment_data(experiment_name, wafer_name, chip_name, info):
+    print("*" * 10)
+    print("EXPERIMENT NAME: {0}".format(experiment_name))
+    print("WAFER NAME: {0}".format(wafer_name))
+    print("CHIP NAME: {0}".format(chip_name))
+    print("INFO: {0}".format(info))
+    print("*" * 10)
+
+def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_filename):
+    program_path = os.path.dirname(os.path.realpath(__file__))
+    #print(program_path)
+    if not layout_filename:
+        print("layout filename is NOT specified")
+        if wafer_name and chip_name:
+            print("wafer and chip names are specified - looking for corresponding layout...")
+            print_experiment_data("UNKNOWN", wafer_name, chip_name, "UNKNOWN")
+            layout_filename = "{0}.lay".format(chip_name)
+        else:
+            print("wafer and chip names are NOT specified - parsing filename")
+            experiment_name, wafer_name, chip_name, info = parse_measurementdata_filename(measurment_filename)
+            print_experiment_data(experiment_name, wafer_name, chip_name, info)
+            layout_filename = "{0}.lay".format(chip_name)
+    else:
+        print("layou filename is specified - reading specifications")
+
+    print(layout_filename)
+
+    layout_filepath = os.path.join(program_path, LAYOUT_FOLDER,layout_filename)
+    if not os.path.isfile(layout_filepath):
+        raise FileNotFoundError("layout file is NOT found")
+
+    print("LAYOUT FILE: {0}".format(layout_filepath)) 
+    chip_data = pd.DataFrame.from_csv(layout_filepath,sep="\t", index_col = None)
+
+
 
 def old_style_iv_analysis():
     pass
@@ -137,14 +201,25 @@ def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , **kwargs):
     data_folder = os.getcwd()
 
     if not measurement_data_filename:
+        print("measurement filename is NOT specified - looking for the measurement data file...")
         measurement_data_filename = __search_for_new_style_measurement_data_file(data_folder)
         if not measurement_data_filename:
-            raise FileNotFoundError()
+            raise FileNotFoundError("measurement data file is not found.")
+    
+    else:
+        print("measurement file is specified - performing analysis")
+    #if not layout_filename:
+    #    layout_filename =  __search_layout_filename(measure)
 
     if old_style_measurement:
-        old_style_iv_analysis()
+        raise NotImplementedError()
+        #old_style_iv_analysis()
     else:
-        new_style_iv_analysis()    
+        if isinstance(measurement_data_filename, str):
+            new_style_iv_analysis(measurement_data_filename, wafer_name, chip_name, layout_filename)
+        elif isinstance(measurement_data_filename, list):
+            for fn in measurement_data_filename:
+                new_style_iv_analysis(fn, wafer_name, chip_name, layout_filename)
 
     #if not measurement_data_filename:
     #    print("analysis")
@@ -168,6 +243,10 @@ if __name__ == "__main__":
     #                help='use new style measurement data')
     parser.add_argument('-o', action = 'store_true', default = False,# type = bool,
                     help='use old style measurement data')
+    
+    parser.add_argument('-lf', action = 'store_true', default = False,# type = bool,
+                    help='open layout folder')
+
     parser.add_argument('-w', metavar='wafer name', type=str, nargs='?', default = "",
                     help='the name of wafer')
     parser.add_argument('-c', metavar='chip name', type=str, nargs='?', default = "",
@@ -175,8 +254,16 @@ if __name__ == "__main__":
     parser.add_argument('-lay', metavar='chip layout filename', type=str, nargs='?', default = "",
                     help='chip layout filename')
 
+
+
     args = parser.parse_args()
-    perform_analysis(**vars(args))
+    if args.lf:
+        layout_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), LAYOUT_FOLDER)
+        request = "explorer \"{0}\"".format(layout_folder)
+        print("OPENING LAYOUT FOLDER:\n\r{0}".format(layout_folder))
+        os.system(request)
+    else:
+        perform_analysis(**vars(args))
     
 
 

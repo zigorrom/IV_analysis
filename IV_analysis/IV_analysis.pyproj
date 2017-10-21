@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>c0bd8b68-0b62-4a4a-b388-e3c3201b7e2a</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>iv_analysis_library.py</StartupFile>
+    <StartupFile>chip_registry_database_handler.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,6 +22,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="add_iv_analysis_library_to_path.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="chip_registry_database_handler.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="IV_analysis.py" />
     <Compile Include="iv_analysis_library.py">
       <SubType>Code</SubType>
