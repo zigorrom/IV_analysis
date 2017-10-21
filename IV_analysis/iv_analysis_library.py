@@ -110,7 +110,19 @@ request = 'explorer "{0}"'.format(result_folder)
 print(request)
 os.system(request)
 
-import PyOriginTools as OR # <-- this module is what you're reading about!
-sheet=OR.Sheet()
-print(sheet.colNames)
-print(sheet.data)
+#import PyOriginTools as OR # <-- this module is what you're reading about!
+#sheet=OR.Sheet()
+#print(sheet.colNames)
+#print(sheet.data)
+
+def new_style_iv_analysis():
+    pass
+
+def old_style_iv_analysis():
+    pass
+
+
+if __name__ == "__main__":
+
+
+    pass
