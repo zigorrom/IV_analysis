@@ -11,6 +11,7 @@ from scipy.interpolate import interp1d, UnivariateSpline
 from scipy import optimize
 
 LAYOUT_FOLDER = "layouts"
+RESULT_FOLDER = "Results"
 
 def parse_measurementdata_filename(filename):
         filename = ntpath.basename(filename)
@@ -183,9 +184,75 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
         raise FileNotFoundError("layout file is NOT found")
 
     print("LAYOUT FILE: {0}".format(layout_filepath)) 
+
+    working_folder = os.path.dirname(measurment_filename)
+    result_folder = os.path.join(working_folder, RESULT_FOLDER)
+    os.makedirs(result_folder, exist_ok=True)
+
     chip_data = pd.DataFrame.from_csv(layout_filepath,sep="\t", index_col = None)
+    chip_data_cols = list(chip_data)
+
+    initial_current = 1e-08
+    measurement_data = pd.DataFrame.from_csv(measurment_filename, index_col = None)
+    measurement_data_cols = list(measurement_data)
+    
+    #col = measurement_data["Independent Var"]
+
+    transfer_curves = measurement_data[measurement_data["Independent Var"] == "gate"]
+    #linear_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -0.1]
+    #saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
+
+    for index,row in transfer_curves.iterrows(): #linear_transfer_curves.iterrows():
+        fname = row["Filename"]
+        (experiment_name, transistor_no, chatacteristic, info) = parse_measurement_filename(fname)
+        number = int(transistor_no)
+        transistor = chip_data[chip_data["No"] == number]
+        width = float(transistor["Width"])
+        length = float(transistor["Length"])
+        print(number)
+        print("\t W = {0}; L = {1};".format(width,length))
+
+        value_current = initial_current * width / length
+
+        data_file_path = os.path.join(working_folder, fname)
+
+        transfer_data = pd.DataFrame.from_csv(data_file_path, index_col = None)
+        #Gate voltage, Gate current, Gate timestamp, Drain voltage, Drain current, Drain timestamp
+        gate_voltage, gate_current, gate_timestamp, drain_voltage, drain_current, drain_timestamp = list(transfer_data)
+    
+        voltages = transfer_data[gate_voltage]
+    
+        currents = transfer_data[drain_current]
+        max_current = currents.max()
+        currents = (currents-max_current).abs()
 
 
+        print(value_current)
+
+        inverse_transfer_curve = interp1d(currents, voltages)
+
+        treshold_voltage = inverse_transfer_curve(value_current)
+    
+        print(treshold_voltage)
+
+        overdrive_gate_voltage = voltages - treshold_voltage
+
+        #dy = np.zeros(y.shape,np.float)
+        transconductance  = np.zeros(currents.shape,np.float)
+        transconductance[0:-1] = np.diff(currents)/np.diff(voltages)
+        #transconductance[-1] = (currents[-1] - currents[-2])/(voltages[-1] - voltages[-2]) 
+        #dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
+        #transconductance = UnivariateSpline(voltages, currents).derivative()(voltages)
+
+        transfer_data[drain_current] = currents
+    
+        transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
+
+        transfer_data["Transconductance"] = transconductance
+    
+        pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
+
+    open_folder(result_folder)
 
 def old_style_iv_analysis():
     pass
@@ -224,6 +291,11 @@ def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , **kwargs):
     #if not measurement_data_filename:
     #    print("analysis")
 
+def open_folder(folder):
+    request = "explorer \"{0}\"".format(folder)
+    print("OPENING FOLDER:\n\r{0}".format(folder))
+    os.system(request)
+
 
 if __name__ == "__main__":
     # options:
@@ -259,9 +331,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.lf:
         layout_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), LAYOUT_FOLDER)
-        request = "explorer \"{0}\"".format(layout_folder)
-        print("OPENING LAYOUT FOLDER:\n\r{0}".format(layout_folder))
-        os.system(request)
+        open_folder(layout_folder)
     else:
         perform_analysis(**vars(args))
     
