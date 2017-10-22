@@ -204,8 +204,8 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
     #saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
 
     overdrive_voltage_for_tlm = -0.5
-    
-    analysis_data_frame = pd.DataFrame(columns = ["Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive", "Drain Voltage"] )
+    analysis_data_columns = ["Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive", "Drain Voltage"]
+    analysis_data_frame = pd.DataFrame(columns = analysis_data_columns )
 
 
     for index,row in transfer_curves.iterrows(): #linear_transfer_curves.iterrows():
@@ -268,6 +268,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
         #    analysis_data_frame = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive]})
         #else:
         df = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive], "Drain Voltage": drain_voltage_value})
+        #df.columns = analysis_data_columns
         analysis_data_frame = analysis_data_frame.append(df, ignore_index=True)
 
     pd.DataFrame.to_csv(analysis_data_frame, os.path.join(result_folder, "analysis.dat"), index = False)
