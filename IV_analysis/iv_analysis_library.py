@@ -2,6 +2,7 @@ import os
 import ntpath
 import re
 import fnmatch
+import math
 import argparse
 import pandas as pd
 import numpy as np
@@ -202,6 +203,11 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
     #linear_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -0.1]
     #saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
 
+    overdrive_voltage_for_tlm = -0.5
+    
+    analysis_data_frame = pd.DataFrame(columns = ["Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive", "Drain Voltage"] )
+
+
     for index,row in transfer_curves.iterrows(): #linear_transfer_curves.iterrows():
         fname = row["Filename"]
         (experiment_name, transistor_no, chatacteristic, info) = parse_measurement_filename(fname)
@@ -209,6 +215,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
         transistor = chip_data[chip_data["No"] == number]
         width = float(transistor["Width"])
         length = float(transistor["Length"])
+        drain_voltage_value = float(row["Dependent Voltage"])
         print(number)
         print("\t W = {0}; L = {1};".format(width,length))
 
@@ -250,8 +257,20 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
 
         transfer_data["Transconductance"] = transconductance
     
-        pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
+        overd_transfer_curve = interp1d(overdrive_gate_voltage, currents)
+        current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
+        resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
 
+
+        pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
+        # "Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive"
+        #if analysis_data_frame is None:
+        #    analysis_data_frame = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive]})
+        #else:
+        df = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive], "Drain Voltage": drain_voltage_value})
+        analysis_data_frame = analysis_data_frame.append(df, ignore_index=True)
+
+    pd.DataFrame.to_csv(analysis_data_frame, os.path.join(result_folder, "analysis.dat"), index = False)
     open_folder(result_folder)
 
 def old_style_iv_analysis():
