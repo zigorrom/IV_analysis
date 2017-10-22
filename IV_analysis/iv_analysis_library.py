@@ -337,6 +337,9 @@ if __name__ == "__main__":
     
     parser.add_argument('-lf', action = 'store_true', default = False,# type = bool,
                     help='open layout folder')
+    parser.add_argument('-sf', action = 'store_true', default = False,# type = bool,
+                    help='open software folder')
+
 
     parser.add_argument('-w', metavar='wafer name', type=str, nargs='?', default = "",
                     help='the name of wafer')
@@ -351,6 +354,9 @@ if __name__ == "__main__":
     if args.lf:
         layout_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), LAYOUT_FOLDER)
         open_folder(layout_folder)
+    elif args.sf:
+        software_folder = os.path.dirname(os.path.realpath(__file__))
+        open_folder(software_folder)
     else:
         perform_analysis(**vars(args))
     
