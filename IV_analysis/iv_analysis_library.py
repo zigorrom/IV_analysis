@@ -161,7 +161,7 @@ def print_experiment_data(experiment_name, wafer_name, chip_name, info):
     print("INFO: {0}".format(info))
     print("*" * 10)
 
-def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_filename):
+def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_filename, overdrive_voltage):
     program_path = os.path.dirname(os.path.realpath(__file__))
     #print(program_path)
     if not layout_filename:
@@ -203,7 +203,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
     #linear_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -0.1]
     #saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
 
-    overdrive_voltage_for_tlm = -0.5
+    overdrive_voltage_for_tlm = overdrive_voltage
     analysis_data_columns = ["Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive", "Drain Voltage"]
     analysis_data_frame = pd.DataFrame(columns = analysis_data_columns )
 
@@ -277,14 +277,14 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
 def old_style_iv_analysis():
     pass
 
-def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , **kwargs):
+def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , vov = 0, **kwargs):
     
     measurement_data_filename = f
     old_style_measurement = o
     wafer_name = w
     chip_name = c
     layout_filename = lay
-
+    overdrive_voltage = vov
     data_folder = os.getcwd()
 
     if not measurement_data_filename:
@@ -303,10 +303,10 @@ def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , **kwargs):
         #old_style_iv_analysis()
     else:
         if isinstance(measurement_data_filename, str):
-            new_style_iv_analysis(measurement_data_filename, wafer_name, chip_name, layout_filename)
+            new_style_iv_analysis(measurement_data_filename, wafer_name, chip_name, layout_filename, overdrive_voltage)
         elif isinstance(measurement_data_filename, list):
             for fn in measurement_data_filename:
-                new_style_iv_analysis(fn, wafer_name, chip_name, layout_filename)
+                new_style_iv_analysis(fn, wafer_name, chip_name, layout_filename, overdrive_voltage)
 
     #if not measurement_data_filename:
     #    print("analysis")
@@ -341,6 +341,8 @@ if __name__ == "__main__":
     parser.add_argument('-sf', action = 'store_true', default = False,# type = bool,
                     help='open software folder')
 
+    parser.add_argument('-vov', metavar='overdrive voltage', type=float, nargs='?', default = 0,
+                    help='overdrive voltage at which current for analysis would be taken')
 
     parser.add_argument('-w', metavar='wafer name', type=str, nargs='?', default = "",
                     help='the name of wafer')
