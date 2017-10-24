@@ -13,7 +13,7 @@
     <Name>IV_analysis</Name>
     <RootNamespace>IV_analysis</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-f C:\Users\i.zadorozhnyi\Desktop\Needles2\MeasurmentData_soi17l_chip13_needles.dat -lay chip2.lay</CommandLineArguments>
+    <CommandLineArguments>-f C:\Users\Dell\Desktop\Needles2\MeasurmentData_soi17l_chip13_needles.dat -lay chip2.lay -vov -0.7</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

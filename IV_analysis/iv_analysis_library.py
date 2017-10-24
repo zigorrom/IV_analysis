@@ -8,8 +8,10 @@ import pandas as pd
 import numpy as np
 
 
+
 from scipy.interpolate import interp1d, UnivariateSpline
 from scipy import optimize
+from scipy import signal
 
 LAYOUT_FOLDER = "layouts"
 RESULT_FOLDER = "Results"
@@ -219,7 +221,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
         print(number)
         print("\t W = {0}; L = {1};".format(width,length))
 
-        value_current = initial_current * width / length
+        
 
         data_file_path = os.path.join(working_folder, fname)
 
@@ -233,33 +235,57 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
         max_current = currents.max()
         currents = (currents-max_current).abs()
 
+        #constant current treshold calculation
+        
+        #value_current = initial_current * width / length
+        #print(value_current)
 
-        print(value_current)
+        #inverse_transfer_curve = interp1d(currents, voltages)
 
-        inverse_transfer_curve = interp1d(currents, voltages)
-
-        treshold_voltage = inverse_transfer_curve(value_current)
+        #treshold_voltage = inverse_transfer_curve(value_current)
     
-        print(treshold_voltage)
+        #print(treshold_voltage)
+
+        ## end constant current 
+
+        # derivative treshold voltage calculation
+
+        delta = voltages[1] - voltages[0]
+        sign = np.sign(delta)
+        delta = abs(delta)
+
+        transconductance = signal.savgol_filter(currents, 21, 2, 1, delta)
+
+        max_transcond_idx = np.argmax(transconductance)
+        max_transcond_voltage, max_transcond = (voltages[max_transcond_idx], sign * transconductance[max_transcond_idx])
+        #y = f(x0) + f'(x0)(x-x0)
+        #x = (y - f(x0) + x0*f'(x0))/f'(x0)
+        treshold_voltage = (0 - currents[max_transcond_idx] + max_transcond_voltage * max_transcond)/ max_transcond
+
+        # end derivative treshold calcultation
+
+
+        transfer_data["Transconductance"] = transconductance
+
+
+
+
 
         overdrive_gate_voltage = voltages - treshold_voltage
-
-        #dy = np.zeros(y.shape,np.float)
-        transconductance  = np.zeros(currents.shape,np.float)
-        transconductance[0:-1] = np.diff(currents)/np.diff(voltages)
-        #transconductance[-1] = (currents[-1] - currents[-2])/(voltages[-1] - voltages[-2]) 
-        #dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
-        #transconductance = UnivariateSpline(voltages, currents).derivative()(voltages)
 
         transfer_data[drain_current] = currents
     
         transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
-
-        transfer_data["Transconductance"] = transconductance
-    
+        
         overd_transfer_curve = interp1d(overdrive_gate_voltage, currents)
         current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
         resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
+        
+        
+       
+        
+
+        
 
 
         pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
