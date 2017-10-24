@@ -260,7 +260,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
         max_transcond_voltage, max_transcond = (voltages[max_transcond_idx], sign * transconductance[max_transcond_idx])
         #y = f(x0) + f'(x0)(x-x0)
         #x = (y - f(x0) + x0*f'(x0))/f'(x0)
-        treshold_voltage = (0 - currents[max_transcond_idx] + max_transcond_voltage * max_transcond)/ max_transcond
+        treshold_voltage = (np.amin(currents) - currents[max_transcond_idx] + max_transcond_voltage * max_transcond)/ max_transcond
 
         # end derivative treshold calcultation
 
