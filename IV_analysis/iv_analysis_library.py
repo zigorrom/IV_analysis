@@ -116,7 +116,15 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
     #saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
 
     overdrive_voltage_for_tlm = overdrive_voltage
-    analysis_data_columns = ["Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive", "Drain Voltage"]
+    analysis_data_columns = ["Filename", 
+                             "Transistor No", 
+                             "Width", 
+                             "Length", 
+                             "Treshold", 
+                             #"Overdrive", 
+                             #"Current@overdrive", 
+                             #"Resistance@overdrive", 
+                             "Drain Voltage"]
     analysis_data_frame = pd.DataFrame(columns = analysis_data_columns )
 
 
@@ -189,8 +197,8 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
         
             overd_transfer_curve = interp1d(overdrive_gate_voltage, currents)
-            current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
-            resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
+            #current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
+            #resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
             
             #current_at_voltage = float(overd_transfer_curve(max_transcond_voltage))
             #resistance_at_voltage = math.fabs(drain_voltage_value/current_at_voltage)
@@ -206,9 +214,9 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
                  "Width": [width], 
                  "Length" : [length], 
                  "Treshold" : [treshold_voltage], 
-                 "Overdrive" : [overdrive_voltage_for_tlm], 
-                 "Id@overdrive" : [current_at_overdrive],
-                 "Rs@overdrive" : [resistance_at_overdrive], 
+                 #"Overdrive" : [overdrive_voltage_for_tlm], 
+                 #"Id@overdrive" : [current_at_overdrive],
+                 #"Rs@overdrive" : [resistance_at_overdrive], 
                  "Drain Voltage": [drain_voltage_value], 
                  "gm_max": [max_transcond], 
                  "Vg-Vth@gm_max":[max_transcond_voltage- treshold_voltage], 
@@ -216,12 +224,26 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
                  #"Rs@gm_max":[resistance_at_voltage]
                  })
             #df.columns = analysis_data_columns
+            
+
+            for i, vov in enumerate(overdrive_voltage):
+                try:
+                    overdrive_col_name = "Overdrive_{0}".format(i)
+                    current_at_overdrive_i_col = "Id@overdrive_{0}".format(i)
+                    resistance_at_overdrive_i_col = "Rs@overdrive_{0}".format(i)
+                    current_at_overdrive_i = float(overd_transfer_curve(vov))
+                    resistance_at_overdrive_i = math.fabs(drain_voltage_value/current_at_overdrive_i)
+                    df[overdrive_col_name] = [vov]
+                    df[current_at_overdrive_i_col] = [current_at_overdrive_i]
+                    df[resistance_at_overdrive_i_col] = [resistance_at_overdrive_i]
+
+                except Exception as e:
+                    print("EXCEPTION OCCURED WHEN CALCULATING VALUES FOR OVERDRIVE VOLTAGE {0} V".format(vov))
+                    print(e)
+                    print("*"*10)
+
+
             analysis_data_frame = analysis_data_frame.append(df, ignore_index=True)
-
-
-
-
-
 
 
         except Exception as e:
@@ -304,7 +326,7 @@ if __name__ == "__main__":
 
 
     # add possibility of several overdrive voltages
-    parser.add_argument('-vov', metavar='overdrive voltage', type=float, nargs='*', default = [0],
+    parser.add_argument('-vov', metavar='overdrive voltage', type=float, nargs='*', default = [],
                     help='overdrive voltage at which current for analysis would be taken')
 
     parser.add_argument('-w', metavar='wafer name', type=str, nargs='?', default = "",
