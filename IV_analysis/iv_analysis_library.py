@@ -121,85 +121,116 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
 
 
     for index,row in transfer_curves.iterrows(): #linear_transfer_curves.iterrows():
-        fname = row["Filename"]
-        (experiment_name, transistor_no, chatacteristic, info) = parse_measurement_filename(fname)
-        number = int(transistor_no)
-        transistor = chip_data[chip_data["No"] == number]
-        width = float(transistor["Width"])
-        length = float(transistor["Length"])
-        drain_voltage_value = float(row["Dependent Voltage"])
-        print(number)
-        print("\t W = {0}; L = {1};".format(width,length))
+        try:
+            fname = row["Filename"]
+            (experiment_name, transistor_no, chatacteristic, info) = parse_measurement_filename(fname)
+            number = int(transistor_no)
+            transistor = chip_data[chip_data["No"] == number]
+            width = float(transistor["Width"])
+            length = float(transistor["Length"])
+            drain_voltage_value = float(row["Dependent Voltage"])
+            print(number)
+            print("\t W = {0}; L = {1};".format(width,length))
 
         
 
-        data_file_path = os.path.join(working_folder, fname)
+            data_file_path = os.path.join(working_folder, fname)
 
-        transfer_data = pd.DataFrame.from_csv(data_file_path, index_col = None)
-        #Gate voltage, Gate current, Gate timestamp, Drain voltage, Drain current, Drain timestamp
-        gate_voltage, gate_current, gate_timestamp, drain_voltage, drain_current, drain_timestamp = list(transfer_data)
+            transfer_data = pd.DataFrame.from_csv(data_file_path, index_col = None)
+            #Gate voltage, Gate current, Gate timestamp, Drain voltage, Drain current, Drain timestamp
+            gate_voltage, gate_current, gate_timestamp, drain_voltage, drain_current, drain_timestamp = list(transfer_data)
     
-        voltages = transfer_data[gate_voltage]
+            voltages = transfer_data[gate_voltage]
     
-        currents = transfer_data[drain_current]
-        max_current = currents.max()
-        currents = (currents-max_current).abs()
+            currents = transfer_data[drain_current]
+            max_current = currents.max()
+            currents = (currents-max_current).abs()
 
-        #constant current treshold calculation
+            #constant current treshold calculation
         
-        #value_current = initial_current * width / length
-        #print(value_current)
+            #value_current = initial_current * width / length
+            #print(value_current)
 
-        #inverse_transfer_curve = interp1d(currents, voltages)
+            #inverse_transfer_curve = interp1d(currents, voltages)
 
-        #treshold_voltage = inverse_transfer_curve(value_current)
+            #treshold_voltage = inverse_transfer_curve(value_current)
     
-        #print(treshold_voltage)
+            #print(treshold_voltage)
 
-        ## end constant current 
+            ## end constant current 
 
-        # derivative treshold voltage calculation
+            # derivative treshold voltage calculation
 
-        delta = voltages[1] - voltages[0]
-        sign = np.sign(delta)
-        delta = abs(delta)
+            delta = voltages[1] - voltages[0]
+            sign = np.sign(delta)
+            delta = abs(delta)
 
-        transconductance = signal.savgol_filter(currents, 21, 2, 1, delta)
+            transconductance = signal.savgol_filter(currents, 21, 2, 1, delta)
 
-        max_transcond_idx = np.argmax(transconductance)
-        max_transcond_voltage, max_transcond = (voltages[max_transcond_idx], sign * transconductance[max_transcond_idx])
-        #y = f(x0) + f'(x0)(x-x0)
-        #x = (y - f(x0) + x0*f'(x0))/f'(x0)
-        treshold_voltage = (np.amin(currents) - currents[max_transcond_idx] + max_transcond_voltage * max_transcond)/ max_transcond
+            max_transcond_idx = np.argmax(transconductance)
+            max_transcond_voltage, max_transcond = (voltages[max_transcond_idx], sign * transconductance[max_transcond_idx])
+            #y = f(x0) + f'(x0)(x-x0)
+            #x = (y - f(x0) + x0*f'(x0))/f'(x0)
+            treshold_voltage = (np.amin(currents) - currents[max_transcond_idx] + max_transcond_voltage * max_transcond)/ max_transcond
 
-        # end derivative treshold calcultation
-
-
-        transfer_data["Transconductance"] = transconductance
+            # end derivative treshold calcultation
 
 
+            transfer_data["Transconductance"] = transconductance
 
 
 
-        overdrive_gate_voltage = voltages - treshold_voltage
 
-        transfer_data[drain_current] = currents
+
+            overdrive_gate_voltage = voltages - treshold_voltage
+
+            transfer_data[drain_current] = currents
     
-        transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
+            transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
         
-        overd_transfer_curve = interp1d(overdrive_gate_voltage, currents)
-        current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
-        resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
-        
-        
-        pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
-        # "Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive"
-        #if analysis_data_frame is None:
-        #    analysis_data_frame = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive]})
-        #else:
-        df = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive], "Drain Voltage": drain_voltage_value})
-        #df.columns = analysis_data_columns
-        analysis_data_frame = analysis_data_frame.append(df, ignore_index=True)
+            overd_transfer_curve = interp1d(overdrive_gate_voltage, currents)
+            current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
+            resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
+            
+            #current_at_voltage = float(overd_transfer_curve(max_transcond_voltage))
+            #resistance_at_voltage = math.fabs(drain_voltage_value/current_at_voltage)
+
+            pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
+            # "Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive"
+            #if analysis_data_frame is None:
+            #    analysis_data_frame = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive]})
+            #else:
+            df = pd.DataFrame.from_dict(
+                {"Filename":[fname], 
+                 "Transistor No":[number],
+                 "Width": [width], 
+                 "Length" : [length], 
+                 "Treshold" : [treshold_voltage], 
+                 "Overdrive" : [overdrive_voltage_for_tlm], 
+                 "Id@overdrive" : [current_at_overdrive],
+                 "Rs@overdrive" : [resistance_at_overdrive], 
+                 "Drain Voltage": [drain_voltage_value], 
+                 "gm_max": [max_transcond], 
+                 "Vg-Vth@gm_max":[max_transcond_voltage- treshold_voltage], 
+                 #"Id@gm_max": [current_at_voltage], 
+                 #"Rs@gm_max":[resistance_at_voltage]
+                 })
+            #df.columns = analysis_data_columns
+            analysis_data_frame = analysis_data_frame.append(df, ignore_index=True)
+
+
+
+
+
+
+
+        except Exception as e:
+            print("EXCEPTION OCCURED WHILE PROCESSING")
+            print(data_file_path)
+            print('*'*10)
+            print(e)
+            print('*'*10)
+
 
     pd.DataFrame.to_csv(analysis_data_frame, os.path.join(result_folder, "analysis.dat"), index = False)
     open_folder(result_folder)
@@ -271,7 +302,9 @@ if __name__ == "__main__":
     parser.add_argument('-sf', action = 'store_true', default = False,# type = bool,
                     help='open software folder')
 
-    parser.add_argument('-vov', metavar='overdrive voltage', type=float, nargs='?', default = 0,
+
+    # add possibility of several overdrive voltages
+    parser.add_argument('-vov', metavar='overdrive voltage', type=float, nargs='*', default = [0],
                     help='overdrive voltage at which current for analysis would be taken')
 
     parser.add_argument('-w', metavar='wafer name', type=str, nargs='?', default = "",

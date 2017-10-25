@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>c0bd8b68-0b62-4a4a-b388-e3c3201b7e2a</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>generate_measurement_data.py</StartupFile>
+    <StartupFile>iv_analysis_library.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -13,7 +13,8 @@
     <Name>IV_analysis</Name>
     <RootNamespace>IV_analysis</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-f C:\Users\Dell\Desktop\Needles2\MeasurmentData_soi17l_chip13_needles.dat -lay chip2.lay -vov -0.7</CommandLineArguments>
+    <CommandLineArguments>
+    </CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
