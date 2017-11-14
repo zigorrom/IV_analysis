@@ -13,8 +13,7 @@
     <Name>IV_analysis</Name>
     <RootNamespace>IV_analysis</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>
-    </CommandLineArguments>
+    <CommandLineArguments>-f D:\PhD\Measurements\2017\SOI#17L\Chip6\20171012\BondedChip\IV_liquid\data_copy\MeasurmentData_generated_2017-10-25.dat -lay chip4.lay</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

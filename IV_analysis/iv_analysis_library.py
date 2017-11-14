@@ -83,11 +83,18 @@ def correct_current_semi_log_scale(current):
     min_val_index = np.argmin(log_currents)
     min_log_current = log_currents[min_val_index]
     
+    
+
     result_log_currents = np.copy(log_currents)
     if left_avg < right_avg:
+        current_left_from_zero = current[min_val_index-1]
+        current_right_from_zero = current[min_val_index]
+
         result_log_currents[:min_val_index] =  2*min_log_current - log_currents[:min_val_index]
     else:
         min_val_index += 1
+        current_left_from_zero = current[min_val_index-1]
+        current_right_from_zero = current[min_val_index]
         result_log_currents[min_val_index:] =  2*min_log_current - log_currents[min_val_index:]
 
     result_currents = np.power(10, result_log_currents)
@@ -99,9 +106,9 @@ def correct_current_lin_scale(current):
 
 def calculate_subthreshold_swing(currents, voltage_step):
     try:
-        log_currents = np.log10(abs_current_values)
+        log_currents = np.log10(currents)
         voltage_step = abs(voltage_step)
-        slope = signal.savgol_filter(log_currents, 21, 2, 1, delta)
+        slope = signal.savgol_filter(log_currents, 21, 2, 1, voltage_step)
         max_slope_idx = np.argmax(slope)
         return slope[max_slope_idx]
     except:
@@ -226,7 +233,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             #current_at_voltage = float(overd_transfer_curve(max_transcond_voltage))
             #resistance_at_voltage = math.fabs(drain_voltage_value/current_at_voltage)
 
-            pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname))
+            pd.DataFrame.to_csv(transfer_data, os.path.join(result_folder, fname), index = False)
             # "Filename", "Transistor No", "Width", "Length", "Treshold", "Overdrive", "Current@overdrive", "Resistance@overdrive"
             #if analysis_data_frame is None:
             #    analysis_data_frame = pd.DataFrame.from_dict({"Filename":[fname], "Transistor No":[number],"Width": [width], "Length" : [length], "Treshold" : [treshold_voltage], "Overdrive" : [overdrive_voltage_for_tlm], "Current@overdrive" : [current_at_overdrive],"Resistance@overdrive" : [resistance_at_overdrive]})
@@ -243,7 +250,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
                  "Drain Voltage": [drain_voltage_value], 
                  "gm_max": [max_transcond], 
                  "Vg-Vth@gm_max":[max_transcond_voltage- treshold_voltage], 
-                 "Subthreshold swing, V/dec": [subthreshold_swing]
+                 "SS(V/dec)": [subthreshold_swing]
                  #"Id@gm_max": [current_at_voltage], 
                  #"Rs@gm_max":[resistance_at_voltage]
                  })
