@@ -73,6 +73,42 @@ def print_experiment_data(experiment_name, wafer_name, chip_name, info):
     print("INFO: {0}".format(info))
     print("*" * 10)
 
+def correct_current_semi_log_scale(current):
+    abs_current_values = np.abs(current)
+    npoints_aver = 3
+    left_avg = np.average(abs_current_values[:npoints_aver])
+    right_avg = np.average(abs_current_values[-npoints_aver:])
+
+    log_currents = np.log10(abs_current_values)
+    min_val_index = np.argmin(log_currents)
+    min_log_current = log_currents[min_val_index]
+    
+    result_log_currents = np.copy(log_currents)
+    if left_avg < right_avg:
+        result_log_currents[:min_val_index] =  2*min_log_current - log_currents[:min_val_index]
+    else:
+        min_val_index += 1
+        result_log_currents[min_val_index:] =  2*min_log_current - log_currents[min_val_index:]
+
+    result_currents = np.power(10, result_log_currents)
+    return result_currents
+
+def correct_current_lin_scale(current):
+    max_current = currents.max()
+    return (currents-max_current).abs()
+
+def calculate_subthreshold_swing(currents, voltage_step):
+    try:
+        log_currents = np.log10(abs_current_values)
+        voltage_step = abs(voltage_step)
+        slope = signal.savgol_filter(log_currents, 21, 2, 1, delta)
+        max_slope_idx = np.argmax(slope)
+        return slope[max_slope_idx]
+    except:
+        print("Error when calculating subthreshold swing")
+        return None
+
+
 def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_filename, overdrive_voltage):
     program_path = os.path.dirname(os.path.realpath(__file__))
     #print(program_path)
@@ -105,16 +141,13 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
     chip_data = pd.DataFrame.from_csv(layout_filepath,sep="\t", index_col = None)
     chip_data_cols = list(chip_data)
 
+
     initial_current = 1e-08
     measurement_data = pd.DataFrame.from_csv(measurment_filename, index_col = None)
     measurement_data_cols = list(measurement_data)
     
-    #col = measurement_data["Independent Var"]
-
     transfer_curves = measurement_data[measurement_data["Independent Var"] == "gate"]
-    #linear_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -0.1]
-    #saturation_transfer_curves = transfer_curves[transfer_curves["Dependent Voltage"] == -1.0]
-
+    
     overdrive_voltage_for_tlm = overdrive_voltage
     analysis_data_columns = ["Filename", 
                              "Transistor No", 
@@ -140,8 +173,6 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             print(number)
             print("\t W = {0}; L = {1};".format(width,length))
 
-        
-
             data_file_path = os.path.join(working_folder, fname)
 
             transfer_data = pd.DataFrame.from_csv(data_file_path, index_col = None)
@@ -151,9 +182,10 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             voltages = transfer_data[gate_voltage]
     
             currents = transfer_data[drain_current]
-            max_current = currents.max()
-            currents = (currents-max_current).abs()
-
+            
+            #currents = correct_current_lin_scale(currents)
+            currents = correct_current_semi_log_scale(currents)
+            subthreshold_swing =  calculate_subthreshold_swing(currents, abs(voltages[1] - voltages[0]))
             #constant current treshold calculation
         
             #value_current = initial_current * width / length
@@ -172,7 +204,6 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             delta = voltages[1] - voltages[0]
             sign = np.sign(delta)
             delta = abs(delta)
-
             transconductance = signal.savgol_filter(currents, 21, 2, 1, delta)
 
             max_transcond_idx = np.argmax(transconductance)
@@ -183,20 +214,12 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
 
             # end derivative treshold calcultation
 
-
             transfer_data["Transconductance"] = transconductance
-
-
-
-
-
             overdrive_gate_voltage = voltages - treshold_voltage
-
             transfer_data[drain_current] = currents
-    
             transfer_data["Overdrive gate voltage"] = overdrive_gate_voltage
-        
             overd_transfer_curve = interp1d(overdrive_gate_voltage, currents)
+    
             #current_at_overdrive = float(overd_transfer_curve(overdrive_voltage_for_tlm))
             #resistance_at_overdrive = math.fabs(drain_voltage_value/current_at_overdrive)
             
@@ -220,6 +243,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
                  "Drain Voltage": [drain_voltage_value], 
                  "gm_max": [max_transcond], 
                  "Vg-Vth@gm_max":[max_transcond_voltage- treshold_voltage], 
+                 "Subthreshold swing, V/dec": [subthreshold_swing]
                  #"Id@gm_max": [current_at_voltage], 
                  #"Rs@gm_max":[resistance_at_voltage]
                  })
