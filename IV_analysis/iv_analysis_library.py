@@ -76,29 +76,51 @@ def print_experiment_data(experiment_name, wafer_name, chip_name, info):
 def correct_current_semi_log_scale(current):
     abs_current_values = np.abs(current)
     npoints_aver = 3
-    left_avg = np.average(abs_current_values[:npoints_aver])
-    right_avg = np.average(abs_current_values[-npoints_aver:])
-
+    
     log_currents = np.log10(abs_current_values)
     min_val_index = np.argmin(log_currents)
     min_log_current = log_currents[min_val_index]
     
+    max_val_left = np.max(log_currents[:min_val_index])
+    max_val_right = np.max(log_currents[min_val_index:])
+
+    if max_val_left < max_val_right:
+        max_difference2x = 2*(max_val_left - min_log_current)
+        log_currents[:min_val_index] = 2 * max_val_left - log_currents[:min_val_index]
+        log_currents[min_val_index:] = max_difference2x + log_currents[min_val_index:] 
+        log_currents = log_currents - max_difference2x
+    else:
+        raise NotImplementedError()
+    result_current = np.power(10, log_currents)
+
+    return result_current
+
+#def correct_current_semi_log_scale(current):
+#    abs_current_values = np.abs(current)
+#    npoints_aver = 3
+#    left_avg = np.average(abs_current_values[:npoints_aver])
+#    right_avg = np.average(abs_current_values[-npoints_aver:])
+
+#    log_currents = np.log10(abs_current_values)
+#    min_val_index = np.argmin(log_currents)
+#    min_log_current = log_currents[min_val_index]
+    
     
 
-    result_log_currents = np.copy(log_currents)
-    if left_avg < right_avg:
-        current_left_from_zero = current[min_val_index-1]
-        current_right_from_zero = current[min_val_index]
+#    result_log_currents = np.copy(log_currents)
+#    if left_avg < right_avg:
+#        current_left_from_zero = current[min_val_index-1]
+#        current_right_from_zero = current[min_val_index]
 
-        result_log_currents[:min_val_index] =  2*min_log_current - log_currents[:min_val_index]
-    else:
-        min_val_index += 1
-        current_left_from_zero = current[min_val_index-1]
-        current_right_from_zero = current[min_val_index]
-        result_log_currents[min_val_index:] =  2*min_log_current - log_currents[min_val_index:]
+#        result_log_currents[:min_val_index] =  2*min_log_current - log_currents[:min_val_index]
+#    else:
+#        min_val_index += 1
+#        current_left_from_zero = current[min_val_index-1]
+#        current_right_from_zero = current[min_val_index]
+#        result_log_currents[min_val_index:] =  2*min_log_current - log_currents[min_val_index:]
 
-    result_currents = np.power(10, result_log_currents)
-    return result_currents
+#    result_currents = np.power(10, result_log_currents)
+#    return result_currents
 
 def correct_current_lin_scale(current):
     max_current = currents.max()
