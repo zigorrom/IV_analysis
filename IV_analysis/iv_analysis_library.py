@@ -73,6 +73,22 @@ def print_experiment_data(experiment_name, wafer_name, chip_name, info):
     print("INFO: {0}".format(info))
     print("*" * 10)
 
+
+def correct_current_semi_log_scale_new(current):
+    abs_current_values = np.abs(current)
+    log_currents = np.log10(abs_current_values)
+    min_val_index = np.argmin(log_currents)
+    min_log_current = log_currents[min_val_index]
+
+    # add averaging for better maximum estimation
+    left_maximum = np.max(log_currents[:min_val_index])
+    right_maximum = np.max(log_currents[min_val_index:])
+    if left_maximum < right_maximum:
+        pass
+    else:
+        pass
+
+
 def correct_current_semi_log_scale(current):
     abs_current_values = np.abs(current)
     npoints_aver = 3
@@ -83,8 +99,6 @@ def correct_current_semi_log_scale(current):
     min_val_index = np.argmin(log_currents)
     min_log_current = log_currents[min_val_index]
     
-    
-
     result_log_currents = np.copy(log_currents)
     if left_avg < right_avg:
         current_left_from_zero = current[min_val_index-1]
