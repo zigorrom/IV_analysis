@@ -97,12 +97,12 @@ def correct_current_semi_log_scale(current):
     min_val_index = np.argmin(log_currents)
     min_log_current = log_currents[min_val_index]
     
-<<<<<<< HEAD
+
     result_log_currents = np.copy(log_currents)
     if left_avg < right_avg:
         current_left_from_zero = current[min_val_index-1]
         current_right_from_zero = current[min_val_index]
-=======
+
     max_val_left = np.max(log_currents[:min_val_index])
     max_val_right = np.max(log_currents[min_val_index:])
 
@@ -133,7 +133,7 @@ def correct_current_semi_log_scale(current):
 #    if left_avg < right_avg:
 #        current_left_from_zero = current[min_val_index-1]
 #        current_right_from_zero = current[min_val_index]
->>>>>>> origin/master
+
 
 #        result_log_currents[:min_val_index] =  2*min_log_current - log_currents[:min_val_index]
 #    else:
