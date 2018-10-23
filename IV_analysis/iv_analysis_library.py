@@ -6,7 +6,7 @@ import math
 import argparse
 import pandas as pd
 import numpy as np
-
+import traceback
 
 
 from scipy.interpolate import interp1d, UnivariateSpline
@@ -58,6 +58,8 @@ def __search_for_new_style_measurement_data_file(folder):
     if matches:
         print("FOUND MATCHES:\n\r{0}".format(matches))
         print("*"*10)
+        matches = [os.path.join(folder, f) for f in matches]
+    
     #print(matches)
     return matches
 
@@ -145,7 +147,7 @@ def correct_current_semi_log_scale(current):
 #    result_currents = np.power(10, result_log_currents)
 #    return result_currents
 
-def correct_current_lin_scale(current):
+def correct_current_lin_scale(currents):
     max_current = currents.max()
     return (currents-max_current).abs()
 
@@ -158,10 +160,11 @@ def calculate_subthreshold_swing(currents, voltage_step):
         return slope[max_slope_idx]
     except:
         print("Error when calculating subthreshold swing")
+        traceback.print_exc()
         return None
 
 
-def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_filename, overdrive_voltage):
+def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_filename, overdrive_voltage, drain_currents):
     program_path = os.path.dirname(os.path.realpath(__file__))
     #print(program_path)
     if not layout_filename:
@@ -234,9 +237,9 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             voltages = transfer_data[gate_voltage]
     
             currents = transfer_data[drain_current]
-            
-            #currents = correct_current_lin_scale(currents)
-            currents = correct_current_semi_log_scale(currents)
+            # print(currents)
+            currents = correct_current_lin_scale(currents)
+            #currents = correct_current_semi_log_scale(currents)
             subthreshold_swing =  calculate_subthreshold_swing(currents, abs(voltages[1] - voltages[0]))
             #constant current treshold calculation
         
@@ -316,7 +319,26 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
                 except Exception as e:
                     print("EXCEPTION OCCURED WHEN CALCULATING VALUES FOR OVERDRIVE VOLTAGE {0} V".format(vov))
                     print(e)
+                    traceback.print_exc()
                     print("*"*10)
+            
+            print("calculating at currents")
+            inverse_transfer_curve = interp1d(currents, voltages)
+            for i, drain_current in enumerate(drain_currents):
+                try:
+                    current_col_name = "DrainCurrent_{0}".format(i)
+                    voltage_at_current_i_col = "Vgate@DrainCurrent_{0}".format(i)
+                    voltage_at_current_i = float(inverse_transfer_curve(drain_current))
+                    df[current_col_name] = [drain_current]
+                    df[voltage_at_current_i_col] = [voltage_at_current_i]
+
+                except Exception as e:
+                    print("EXCEPTION OCCURED WHEN CALCULATING GATE VOLTAGES FOR DRAIN CURRENT {0} V".format(drain_current))
+                    print(e)
+                    print("*"*10)
+                    traceback.print_exc()
+                    print("*"*10)
+
 
 
             analysis_data_frame = analysis_data_frame.append(df, ignore_index=True)
@@ -327,6 +349,8 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             print(data_file_path)
             print('*'*10)
             print(e)
+            print('*'*10)
+            traceback.print_exc()
             print('*'*10)
 
 
@@ -344,7 +368,10 @@ def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , vov = 0, **kw
     chip_name = c
     layout_filename = lay
     overdrive_voltage = vov
+    drain_currents = kwargs.get("id", None)
+    
     data_folder = os.getcwd()
+    
 
     if not measurement_data_filename:
         print("measurement filename is NOT specified - looking for the measurement data file...")
@@ -362,10 +389,10 @@ def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , vov = 0, **kw
         #old_style_iv_analysis()
     else:
         if isinstance(measurement_data_filename, str):
-            new_style_iv_analysis(measurement_data_filename, wafer_name, chip_name, layout_filename, overdrive_voltage)
+            new_style_iv_analysis(measurement_data_filename, wafer_name, chip_name, layout_filename, overdrive_voltage, drain_currents)
         elif isinstance(measurement_data_filename, list):
             for fn in measurement_data_filename:
-                new_style_iv_analysis(fn, wafer_name, chip_name, layout_filename, overdrive_voltage)
+                new_style_iv_analysis(fn, wafer_name, chip_name, layout_filename, overdrive_voltage, drain_currents)
 
     #if not measurement_data_filename:
     #    print("analysis")
@@ -404,6 +431,9 @@ if __name__ == "__main__":
     # add possibility of several overdrive voltages
     parser.add_argument('-vov', metavar='overdrive voltage', type=float, nargs='*', default = [],
                     help='overdrive voltage at which current for analysis would be taken')
+
+    parser.add_argument('-id', metavar='drain current', type=float, nargs="*", default=[],
+                    help="drain currents to find corresponding gate voltages")
 
     parser.add_argument('-w', metavar='wafer name', type=str, nargs='?', default = "",
                     help='the name of wafer')
