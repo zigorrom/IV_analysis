@@ -191,6 +191,9 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
 
     working_folder = os.path.dirname(measurment_filename)
     result_folder = os.path.join(working_folder, RESULT_FOLDER)
+    head, tail = os.path.split(measurment_filename)
+    result_fname = "Analysis_{0}".format(tail)
+    result_measurement_filename = os.path.join(result_folder, result_fname)
     os.makedirs(result_folder, exist_ok=True)
 
     chip_data = pd.DataFrame.from_csv(layout_filepath,sep="\t", index_col = None)
@@ -215,7 +218,7 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
                              "Drain Voltage"]
     analysis_data_frame = pd.DataFrame(columns = analysis_data_columns )
 
-
+    data_file_path = None
     for index,row in transfer_curves.iterrows(): #linear_transfer_curves.iterrows():
         try:
             fname = row["Filename"]
@@ -354,7 +357,8 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
             print('*'*10)
 
 
-    pd.DataFrame.to_csv(analysis_data_frame, os.path.join(result_folder, "analysis.dat"), index = False)
+    # pd.DataFrame.to_csv(analysis_data_frame, os.path.join(result_folder, "analysis.dat"), index = False)
+    pd.DataFrame.to_csv(analysis_data_frame, result_measurement_filename, index = False)
     open_folder(result_folder)
 
 def old_style_iv_analysis():
