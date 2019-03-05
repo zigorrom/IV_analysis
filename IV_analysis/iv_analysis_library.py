@@ -148,8 +148,69 @@ def correct_current_semi_log_scale(current):
 #    return result_currents
 
 def correct_current_lin_scale(currents):
-    max_current = currents.max()
-    return (currents-max_current).abs()
+    new_currents = currents.abs()
+    min_current = new_currents.min()
+
+    return (new_currents-min_current)
+
+def correct_current_lin_scale_consider_wp(currents, voltages):
+    #voltages should be monotonic
+    length = len(currents)
+    start_idx = 0
+    end_idx = length-1
+    voltages = voltages.values
+    abs_currents = currents.abs()
+    min_abs_current_idx = np.argmin(abs_currents)
+
+    if length < 10:
+        return abs_currents
+
+    # padding = 5
+    # if length > 3*padding:
+    #     start_idx = start_idx + padding
+    #     end_idx = end_idx - padding
+    
+    
+
+    if voltages[0] * voltages[-1] < 0:
+        #determine which is negative and which is positive
+        if voltages[0]< voltages[-1]:
+            start_idx = 0
+            end_idx = min_abs_current_idx
+
+        else:
+            start_idx = min_abs_current_idx
+            end_idx = length-1
+    
+    #otherwise voltages have the same sign
+    elif abs(voltages[0]) < abs(voltages[-1]):
+        #here lower index is assumed to correspond to low currents
+        start_idx = 0
+        end_idx = min_abs_current_idx
+
+    else:
+        #here lower index is assumed to correspond to high currents
+        start_idx = min_abs_current_idx
+        end_idx = length-1
+
+    if start_idx > end_idx:
+        print("idx_range: {0} - {1}".format(start_idx, end_idx))
+        raise ValueError("start index is greater than end index")
+    
+    elif start_idx< end_idx:
+        max_current_index = np.argmax(abs_currents[start_idx:end_idx])
+        value_to_subtract = currents[max_current_index]
+        new_currents = currents - value_to_subtract
+        return new_currents
+
+    else:
+        return abs_currents
+
+
+    
+
+    
+
 
 def calculate_subthreshold_swing(currents, voltage_step):
     try:
@@ -241,7 +302,8 @@ def new_style_iv_analysis(measurment_filename, wafer_name, chip_name, layout_fil
     
             currents = transfer_data[drain_current]
             # print(currents)
-            currents = correct_current_lin_scale(currents)
+            #currents = correct_current_lin_scale(currents)
+            currents = correct_current_lin_scale_consider_wp(currents, voltages)
             #currents = correct_current_semi_log_scale(currents)
             subthreshold_swing =  calculate_subthreshold_swing(currents, abs(voltages[1] - voltages[0]))
             #constant current treshold calculation
@@ -375,6 +437,7 @@ def perform_analysis(f = "", o = False, w = "", c = "", lay = "" , vov = 0, **kw
     drain_currents = kwargs.get("id", None)
     
     data_folder = os.getcwd()
+    #"C:\\Users\\Dell\\Desktop\\SOI17R\\Chip32\\2018-05-23\\001-IV_Check\\"#
     
 
     if not measurement_data_filename:
@@ -448,7 +511,7 @@ if __name__ == "__main__":
 
 
 
-    args = parser.parse_args()
+    args = parser.parse_args()#["-lay","chip3.lay"])
     if args.lf:
         layout_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), LAYOUT_FOLDER)
         open_folder(layout_folder)
